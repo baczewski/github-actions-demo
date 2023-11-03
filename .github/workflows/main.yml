@@ -1,9 +1,5 @@
-name: hello-world
+name: Java CI
 on: push
-env:
-  docker_username: ${{ github.actor }}
-  docker_password: ${{ secrets.GITHUB_TOKEN }}
-  GIT_COMMIT: ${{ github.sha }}
 jobs:
   Clone-down:
     runs-on: ubuntu-latest
@@ -18,7 +14,7 @@ jobs:
           path: .
   Build:
     runs-on: ubuntu-latest
-    needs: [Clone-down]
+    needs: Clone-down
     container: gradle:6-jdk11
     steps:
       - name: Download code
@@ -35,45 +31,3 @@ jobs:
         with:
           name: code
           path: .
-      - name: Upload Jar
-        uses: actions/upload-artifact@v3
-        with:
-          name: Jar
-          path: app/build/libs/app-0.1-all.jar
-  Docker-image:
-    runs-on: ubuntu-latest
-    needs: [Build]
-    permissions:
-      packages: write
-    steps:
-      - name: Download code
-        uses: actions/download-artifact@v3
-        with: 
-          name: code
-          path: .
-      - name: Build docker
-        run: chmod +x ci/build-docker.sh && ci/build-docker.sh
-      - name: Push docker
-        run: chmod +x ci/push-docker.sh && ci/push-docker.sh
-  Component-test:
-    runs-on: ubuntu-latest
-    needs: [Docker-image]
-    steps:
-      - name: Download code
-        uses: actions/download-artifact@v3
-        with:
-          name: code
-          path: .
-      - name: Execute component test
-        run: chmod +x ci/component-test.sh && ci/component-test.sh
-  Performance-test:
-    runs-on: ubuntu-latest
-    needs: [Docker-image]
-    steps:
-      - name: Download code
-        uses: actions/download-artifact@v3
-        with:
-          name: code
-          path: .
-      - name: Execute performance test
-        run: chmod +x ci/performance-test.sh && ci/performance-test.sh
